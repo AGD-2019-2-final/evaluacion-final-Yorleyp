@@ -17,13 +17,37 @@
 -- 
 fs -rm -f -r output;
 -- 
-u = LOAD 'data.csv' USING PigStorage(',') 
-    AS (id:int, 
-        firstname:CHARARRAY, 
-        surname:CHARARRAY, 
-        birthday:CHARARRAY, 
-        color:CHARARRAY, 
-        quantity:INT);
 --
 -- >>> Escriba su respuesta a partir de este punto <<<
 --
+--cargando data.csv a HDFS
+--fs -put data.csv
+
+--
+-- Carga el archivo desde el disco duro
+--
+u = LOAD 'data.csv' USING PigStorage(',')
+    AS (id:CHARARRAY,
+        nombre:CHARARRAY,
+        apellido:CHARARRAY,
+        fecha: CHARARRAY,
+        color: CHARARRAY,
+        valor: INT);
+--DUMP u;
+
+--
+v = FILTER u BY (color matches 'blue');
+--DUMP v;
+
+--
+w = FILTER v BY (nombre matches 'Z.*');
+--DUMP w;
+
+--
+x = FOREACH w GENERATE nombre, color;
+--DUMP x;
+
+STORE x INTO 'output';
+
+-- copia los archivos del HDFS al sistema local
+--fs -get output/ .

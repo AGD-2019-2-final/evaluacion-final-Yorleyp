@@ -30,14 +30,39 @@
 -- 
 fs -rm -f -r output;
 --
-u = LOAD 'data.csv' USING PigStorage(',') 
-    AS (id:int, 
-        firstname:CHARARRAY, 
-        surname:CHARARRAY, 
-        birthday:CHARARRAY, 
-        color:CHARARRAY, 
-        quantity:INT);
 --
 -- >>> Escriba su respuesta a partir de este punto <<<
 --
+u = LOAD 'data.csv' USING PigStorage(',')
+    AS (id:CHARARRAY,
+        nombre:CHARARRAY,
+        apellido:CHARARRAY,
+        fecha: CHARARRAY,
+        color: CHARARRAY,
+        valor: INT);
+--DUMP u;
+--
+--
+v = FOREACH u GENERATE fecha, ToDate(fecha,'yyyy-MM-dd') as (fecha2:DateTime);
+--DUMP v;
 
+--
+
+--
+--
+w = FOREACH v GENERATE fecha as c1, REGEX_EXTRACT(fecha, '(....)-(..)-(..)', 3) as c2, GetDay(fecha2) as c3,LOWER(ToString(fecha2, 'EEE')) as c4,LOWER(ToString(fecha2, 'EEEE')) as c5;
+--DUMP w;
+
+x = FOREACH w GENERATE c1, c2, c3, REPLACE(c4, 'mon', 'lun') AS c4, REPLACE(c5, 'monday', 'lunes') AS c5;
+x = FOREACH x GENERATE c1, c2, c3, REPLACE(c4, 'tue', 'mar') AS c4, REPLACE(c5, 'tuesday', 'martes') AS c5;
+x = FOREACH x GENERATE c1, c2, c3, REPLACE(c4, 'wed', 'mie') AS c4, REPLACE(c5, 'wednesday', 'miercoles') AS c5;
+x = FOREACH x GENERATE c1, c2, c3, REPLACE(c4, 'thu', 'jue') AS c4, REPLACE(c5, 'thursday', 'jueves') AS c5;
+x = FOREACH x GENERATE c1, c2, c3, REPLACE(c4, 'fri', 'vie') AS c4, REPLACE(c5, 'friday', 'viernes') AS c5;
+x = FOREACH x GENERATE c1, c2, c3, REPLACE(c4, 'sat', 'sab') AS c4, REPLACE(c5, 'saturday', 'sabado') AS c5;
+x = FOREACH x GENERATE c1, c2, c3, REPLACE(c4, 'sun', 'dom') AS c4, REPLACE(c5, 'sunday', 'domingo') AS c5;
+--DUMP x;
+
+STORE x INTO 'output' USING PigStorage(',');
+
+-- copia los archivos del HDFS al sistema local
+--fs -get output/ .

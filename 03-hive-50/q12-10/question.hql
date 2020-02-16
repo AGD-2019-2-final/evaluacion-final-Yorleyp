@@ -15,16 +15,55 @@ DROP TABLE IF EXISTS t0;
 CREATE TABLE t0 (
     c1 STRING,
     c2 ARRAY<CHAR(1)>, 
-    c3 MAP<STRING, INT>
-    )
+    c3 MAP<STRING, INT>)
     ROW FORMAT DELIMITED 
         FIELDS TERMINATED BY '\t'
         COLLECTION ITEMS TERMINATED BY ','
         MAP KEYS TERMINATED BY '#'
         LINES TERMINATED BY '\n';
+		
 LOAD DATA LOCAL INPATH 'data.tsv' INTO TABLE t0;
 --
 -- >>> Escriba su respuesta a partir de este punto <<<
 --
 
+DROP TABLE IF EXISTS temp0;
+CREATE TABLE temp0
+AS
+    SELECT c1, A2, c3
+    FROM (t0 LATERAL VIEW explode(c2) t0 AS A2);
+
+--SELECT * 
+--FROM temp0;
+
+DROP TABLE IF EXISTS temp1;
+CREATE TABLE temp1
+AS
+    SELECT c1, A2, A3
+    FROM (temp0 LATERAL VIEW explode(c3) temp0 AS A3,V1);
+
+--SELECT * 
+--FROM temp1
+--LIMIT 10;
+
+
+DROP TABLE IF EXISTS salida;
+CREATE TABLE salida
+AS
+    SELECT A2, A3, COUNT(c1)
+    FROM temp1
+    GROUP BY A2, A3;
+
+
+--SELECT * 
+--FROM salida
+--LIMIT 5;
+
+INSERT OVERWRITE LOCAL DIRECTORY 'output'
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+SELECT
+    *
+FROM
+    salida; 	
 

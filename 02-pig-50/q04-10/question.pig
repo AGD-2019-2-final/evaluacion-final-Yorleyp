@@ -27,3 +27,38 @@ fs -rm -f -r output;
 -- 
 --  >>> Escriba su respuesta a partir de este punto <<<
 -- 
+--cargando data.tsv a HDFS
+--fs -put truck_event_text_partition.csv
+
+--
+-- Carga el archivo desde el disco duro
+--
+u = LOAD 'truck_event_text_partition.csv' USING PigStorage(',')
+    AS (driverId:INT,
+        truckId:INT,
+        eventTime:CHARARRAY,
+        eventType:CHARARRAY,
+        longitude:DOUBLE,
+        latitude:DOUBLE,
+        eventKey:CHARARRAY,
+        correlationId:CHARARRAY,
+        routeId:LONG,
+        routeName:CHARARRAY,
+        eventDate:CHARARRAY);
+--DUMP u
+
+--seleccionando las tres primeras columnas
+v = FOREACH u GENERATE $0..$2;
+--DUMP v;
+
+w = LIMIT v 10;
+--DUMP w;
+
+y = ORDER w BY $0,$1,$2;
+--DUMP y;
+
+STORE y INTO 'output' USING PigStorage(',');
+
+-- copia los archivos del HDFS al sistema local
+--fs -get output/ .
+
